@@ -14,7 +14,6 @@ OUT = ./Build
 
 # External Tools
 STM32CUBEIDE = /home/nre/st/stm32cubeide_*
-OPENOCD = ${STM32CUBEIDE}/plugins/com.st.stm32cube.ide.mcu.externaltools.openocd.*/tools/bin/openocd
 PROGRAMMER = ${STM32CUBEIDE}/plugins/com.st.stm32cube.ide.mcu.externaltools.cubeprogrammer.*/tools/bin/STM32_Programmer_CLI
 
 STM32CUBEG0 = /home/nre/Work/stm32/STM32CubeG0

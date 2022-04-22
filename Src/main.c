@@ -15,31 +15,41 @@ void port_write(GPIO_TypeDef * port, uint8_t pin, bool value)
 
 int port_configure(GPIO_TypeDef * port, uint8_t pin, GPIO_Mode mode)
 {
+    uint32_t temp;
+
     // Set mode
     switch(mode)
     {
         case GPIO_MODE_INPUT_FLOATING:
         case GPIO_MODE_INPUT_PULLUP:
         case GPIO_MODE_INPUT_PULLDOWN:
-            RESET_MASK(port->MODER, 0x3 << (2*pin));
-            SET_MASK(port->MODER, GPIO_LL_MODE_INPUT << (2*pin));
+            temp = port->MODER;
+            RESET_MASK(temp, 0x3 << (2*pin));
+            SET_MASK(temp, GPIO_LL_MODE_INPUT << (2*pin));
+            port->MODER = temp;
             break;
 
         case GPIO_MODE_OUTPUT_OPEN_DRAIN:
         case GPIO_MODE_OUTPUT_PUSH_PULL:
-            RESET_MASK(port->MODER, 0x3 << (2*pin));
-            SET_MASK(port->MODER, GPIO_LL_MODE_OUTPUT << (2*pin));
+            temp = port->MODER;
+            RESET_MASK(temp, 0x3 << (2*pin));
+            SET_MASK(temp, GPIO_LL_MODE_OUTPUT << (2*pin));
+            port->MODER = temp;
             break;
 
         case GPIO_MODE_ALTERNATE_OPEN_DRAIN:
         case GPIO_MODE_ALTERNATE_PUSH_PULL:
-            RESET_MASK(port->MODER, 0x3 << (2*pin));
-            SET_MASK(port->MODER, GPIO_LL_MODE_ALTERNATE << (2*pin));
+            temp = port->MODER;
+            RESET_MASK(temp, 0x3 << (2*pin));
+            SET_MASK(temp, GPIO_LL_MODE_ALTERNATE << (2*pin));
+            port->MODER = temp;
             break;
 
         case GPIO_MODE_ANALOG:
-            RESET_MASK(port->MODER, 0x3 << (2*pin));
-            SET_MASK(port->MODER, GPIO_LL_MODE_ANALOG << (2*pin));
+            temp = port->MODER;
+            RESET_MASK(temp, 0x3 << (2*pin));
+            SET_MASK(temp, GPIO_LL_MODE_ANALOG << (2*pin));
+            port->MODER = temp;
             break;
 
         default:
@@ -68,18 +78,24 @@ int port_configure(GPIO_TypeDef * port, uint8_t pin, GPIO_Mode mode)
     switch(mode)
     {
         case GPIO_MODE_INPUT_FLOATING:
-            RESET_MASK(port->PUPDR, 0x3 << (2*pin));
-            SET_MASK(port->PUPDR, GPIO_LL_PUPD_NONE << (2*pin));
+            temp = port->PUPDR;
+            RESET_MASK(temp, 0x3 << (2*pin));
+            SET_MASK(temp, GPIO_LL_PUPD_NONE << (2*pin));
+            port->PUPDR = temp;
             break;
 
         case GPIO_MODE_INPUT_PULLUP:
-            RESET_MASK(port->PUPDR, 0x3 << (2*pin));
-            SET_MASK(port->PUPDR, GPIO_LL_PUPD_PULLUP << (2*pin));
+            temp = port->PUPDR;
+            RESET_MASK(temp, 0x3 << (2*pin));
+            SET_MASK(temp, GPIO_LL_PUPD_PULLUP << (2*pin));
+            port->PUPDR = temp;
             break;
 
         case GPIO_MODE_INPUT_PULLDOWN:
-            RESET_MASK(port->PUPDR, 0x3 << (2*pin));
-            SET_MASK(port->PUPDR, GPIO_LL_PUPD_PULLDOWN << (2*pin));
+            temp = port->PUPDR;
+            RESET_MASK(temp, 0x3 << (2*pin));
+            SET_MASK(temp, GPIO_LL_PUPD_PULLDOWN << (2*pin));
+            port->PUPDR = temp;
             break;
 
         default:
@@ -107,8 +123,10 @@ void port_set_alternate_mode(GPIO_TypeDef * port, uint8_t pin, uint8_t mode)
     // AFRx[28..31] => AFSEL7/15
     uint8_t off = 4 * (pin % 8);
 
-    RESET_MASK(port->AFR[idx], 0xF << off);
-    SET_MASK(port->AFR[idx], mode << off);
+    uint32_t temp = port->AFR[idx];
+    RESET_MASK(temp, 0xF << off);
+    SET_MASK(temp, mode << off);
+    port->AFR[idx] = temp;
 }
 
 void nvic_enable_int(IRQn_Type irq)
@@ -118,7 +136,7 @@ void nvic_enable_int(IRQn_Type irq)
 
 int port_enable_extint(GPIO_TypeDef * port, uint8_t pin)
 {
-    uint32_t tmp = 0;
+    uint32_t temp = 0;
     uint8_t regval = 0;
 
     if (port == GPIOA) regval = 0x0;
@@ -143,10 +161,10 @@ int port_enable_extint(GPIO_TypeDef * port, uint8_t pin)
     uint8_t off = 8 * (pin % 4);
 
     // Set EXTI Mux to desired GPIO Port
-    tmp = EXTI->EXTICR[idx];
-    RESET_MASK(tmp, 0x07 << off);
-    SET_MASK(tmp, regval << off);
-    EXTI->EXTICR[idx] = tmp;
+    temp = EXTI->EXTICR[idx];
+    RESET_MASK(temp, 0x07 << off);
+    SET_MASK(temp, regval << off);
+    EXTI->EXTICR[idx] = temp;
 
     // Enable rising+falling edge triggers
     SET_BIT(EXTI->RTSR1, pin);
