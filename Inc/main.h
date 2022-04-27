@@ -17,6 +17,7 @@ extern void port_falling_edge(unsigned int pin);
 /*
  * Pin mapping
  */
+
 #define LED_PORT GPIOA
 #define LED_PIN 5
 
@@ -33,12 +34,12 @@ extern void port_falling_edge(unsigned int pin);
  * Bits manipulation
  */
 
-#define IS_SET_BIT(a, b) (((a) & (1 << (b))) != 0)
-#define RESET_MASK(a, m) (a &= ~(m))
+#define BIT(b)           (1 << (b))
+#define SET_BIT(a, b)    (a |= BIT(b))
+#define RESET_BIT(a, b)  (a &= ~BIT(b))
+#define CHECK_BIT(a, b)  (((a) & BIT(b)) != 0)
 #define SET_MASK(a, m)   (a |= (m))
-#define SET_BIT(a, b)    (a |= (1 << (b)))
-#define RESET_BIT(a, b)  (a &= ~(1 << (b)))
-
+#define RESET_MASK(a, m) (a &= ~(m))
 
 /*
  * GPIO

@@ -3,20 +3,19 @@ CC = arm-none-eabi-gcc
 OBJDUMP = arm-none-eabi-objdump
 OBJCOPY = arm-none-eabi-objcopy
 SIZE = arm-none-eabi-size
-GDB = gdb-multiarch
-ST_UTIL = st-util
 
-MONITOR = picocom
-TTY = /dev/ttyACM0
 
 APP = HelloWorld
 OUT = ./Build
 
 # External Tools
-STM32CUBEIDE = /home/nre/st/stm32cubeide_*
-PROGRAMMER = ${STM32CUBEIDE}/plugins/com.st.stm32cube.ide.mcu.externaltools.cubeprogrammer.*/tools/bin/STM32_Programmer_CLI
+PROGRAMMER = /opt/st/stm32cubeide_*/plugins/com.st.stm32cube.ide.mcu.externaltools.cubeprogrammer.*/tools/bin/STM32_Programmer_CLI
 
-STM32CUBEG0 = /home/nre/Work/stm32/STM32CubeG0
+# For serial monitor
+TTY = /dev/ttyACM0
+
+# STM32G0xx and CMSIS headers
+STM32CUBEG0 = ../STM32CubeG0
 
 SRC_DIR = ./Src
 INC_DIR = ./Inc
@@ -83,42 +82,40 @@ OBJ_DIR = $(OUT)/Objects
 OBJECTS = $(SOURCES:%.c=$(OBJ_DIR)/%.o) $(ASM:%.s=$(OBJ_DIR)/%.o)
 DEPENDS = $(SOURCES:%.c=$(OBJ_DIR)/%.d)
 
-.PHONY: all prepare clean upload debug monitor
+.PHONY: all clean upload debug monitor
+.SILENT:
 
-all: prepare $(OBJECTS)
-	@echo "Linking objects"
-	@$(CC) $(addprefix $L,$(LDFLAGS)) -T$(LDSCRIPT) $(CFLAGS) $(OBJECTS) -o "$(OUT)/$(APP).elf" -static -lc -lm
-	@$(OBJDUMP) -h -S "$(OUT)/$(APP).elf" > "$(OUT)/$(APP).list"
-	@$(OBJCOPY) -O binary "$(OUT)/$(APP).elf" "$(OUT)/$(APP).bin"
-	@$(SIZE) $(OUT)/$(APP).elf
-
-prepare:
-	@echo "Create directories"
-	@mkdir -p "$(OUT)"
+all: $(OBJECTS)
+	echo "Linking objects"
+	mkdir -p "$(OUT)"
+	$(CC) $(addprefix $L,$(LDFLAGS)) -T$(LDSCRIPT) $(CFLAGS) $(OBJECTS) -o "$(OUT)/$(APP).elf" -static -lc -lm
+	$(OBJDUMP) -h -S "$(OUT)/$(APP).elf" > "$(OUT)/$(APP).list"
+	$(OBJCOPY) -O binary "$(OUT)/$(APP).elf" "$(OUT)/$(APP).bin"
+	$(SIZE) $(OUT)/$(APP).elf
 
 clean:
-	@echo "Clean compilation artifacts"
-	@rm -rf "$(OUT)"
+	echo "Clean compilation artifacts"
+	rm -rf "$(OUT)"
 
 upload: all
-	@$(PROGRAMMER) -c port=swd -d "$(OUT)/$(APP).bin" 0x8000000 -v -hardRst
+	$(PROGRAMMER) -c port=swd -d "$(OUT)/$(APP).bin" 0x8000000 -v -hardRst
 
 debug: $(OUT)/$(APP).elf
-	$(ST_UTIL) &
-	${GDB} -x init.gdb "$<"
-	killall $(ST_UTIL)
+	st-util &
+	gdb-multiarch -x init.gdb $<
+	killall st-util
 
 monitor:
-	$(MONITOR) -b 9600 $(TTY)
+	picocom -b 9600 $(TTY)
 
 $(OBJ_DIR)/%.o: %.s
-	@echo "Building $<"
-	@mkdir -p $(@D)
-	@$(AS) $(ASFLAGS) -c -o "$@" "$<"
+	echo "Building $<"
+	mkdir -p $(@D)
+	$(AS) $(ASFLAGS) -c -o $@ $<
 
 $(OBJ_DIR)/%.o: %.c
-	@echo "Building $<"
-	@mkdir -p $(@D)
-	@$(CC) $(addprefix $I,$(INCLUDES)) $(addprefix $D,$(DEFINES)) $(addprefix $W,$(WARNINGS)) $(CFLAGS) $(OFLAGS) -ffunction-sections -fdata-sections -c -o "$@" "$<"
+	echo "Building $<"
+	mkdir -p $(@D)
+	$(CC) $(addprefix $I,$(INCLUDES)) $(addprefix $D,$(DEFINES)) $(addprefix $W,$(WARNINGS)) $(CFLAGS) $(OFLAGS) -ffunction-sections -fdata-sections -c -o $@ $<
 
 -include $(DEPENDS)
